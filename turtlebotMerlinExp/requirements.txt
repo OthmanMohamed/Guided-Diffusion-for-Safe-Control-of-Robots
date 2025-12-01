@@ -1,0 +1,12 @@
+torch>=1.9.0
+torchvision>=0.10.0
+numpy>=1.21.0
+matplotlib>=3.4.0
+scikit-learn>=1.0.0
+tensorboard>=2.7.0
+opencv-python>=4.5.0
+tqdm>=4.62.0
+transformers>=4.20.0
+rospkg>=1.2.0
+cv-bridge>=1.16.0
+
