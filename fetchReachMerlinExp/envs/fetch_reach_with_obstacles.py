@@ -2,8 +2,9 @@
 """
 Custom FetchReach environment with obstacles.
 
-This wrapper adds obstacles to the standard FetchReach environment
-by modifying the MuJoCo model directly.
+This wrapper provides access to the FetchReach environment with obstacles.
+Note: Obstacles must be added directly to the environment source files.
+See README.md for instructions on adding obstacles.
 """
 
 import gymnasium as gym
@@ -13,120 +14,53 @@ import mujoco
 
 
 class FetchReachWithObstacles(Wrapper):
+    """
+    Wrapper for FetchReach environment with obstacles.
+    
+    Note: This wrapper assumes obstacles are already defined in the 
+    environment's source XML/model files. It does not add obstacles programmatically.
+    """
     def __init__(self, env, obstacles_config=None):
         """
-        Initialize FetchReach environment with obstacles.
+        Initialize FetchReach environment wrapper.
         
         Args:
-            env: Base FetchReach environment
-            obstacles_config: Dictionary defining obstacles
-                Format: {
-                    'obstacles': [
-                        {
-                            'name': 'obstacle1',
-                            'type': 'box',
-                            'pos': [x, y, z],
-                            'size': [width, height, depth],
-                            'rgba': [r, g, b, a],
-                            'contype': 1,
-                            'conaffinity': 1
-                        },
-                        ...
-                    ]
-                }
+            env: Base FetchReach environment (with obstacles already in source)
+            obstacles_config: Optional config (kept for compatibility, not used)
         """
         super().__init__(env)
         self.env = env
-        
-        # Default obstacles configuration
-        if obstacles_config is None:
-            obstacles_config = {
-                'obstacles': [
-                    {
-                        'name': 'obstacle1',
-                        'type': 'box',
-                        'pos': [1.25, 0.75, 0.42],
-                        'size': [0.025, 0.025, 0.2],
-                        'rgba': [0.8, 0.2, 0.2, 0.8],
-                        'contype': 1,
-                        'conaffinity': 1
-                    },
-                    {
-                        'name': 'obstacle2',
-                        'type': 'box',
-                        'pos': [1.0, 0.5, 0.42],
-                        'size': [0.025, 0.025, 0.2],
-                        'rgba': [0.2, 0.8, 0.2, 0.8],
-                        'contype': 1,
-                        'conaffinity': 1
-                    }
-                ]
-            }
-        
-        self.obstacles_config = obstacles_config
-        self.add_obstacles()
-    
-    def add_obstacles(self):
-        """Add obstacles to the MuJoCo model."""
-        model = self.env.unwrapped.model
-        
-        # Get the worldbody
-        worldbody = model.find('worldbody')
-        if worldbody is None:
-            print("Warning: Could not find worldbody in MuJoCo model")
-            return
-        
-        # Add each obstacle
-        for obstacle in self.obstacles_config['obstacles']:
-            self.add_single_obstacle(worldbody, obstacle)
-        
-        # Recompile the model
-        mujoco.mj_forward(model, self.env.unwrapped.data)
-    
-    def add_single_obstacle(self, worldbody, obstacle):
-        """Add a single obstacle to the worldbody."""
-        # Create obstacle body
-        obstacle_body = mujoco.mj_addBody(worldbody, obstacle['name'])
-        
-        # Add geom to the body
-        geom = mujoco.mj_addGeom(obstacle_body, obstacle['type'])
-        
-        # Set geom properties
-        geom.pos = obstacle['pos']
-        geom.size = obstacle['size']
-        geom.rgba = obstacle['rgba']
-        geom.contype = obstacle['contype']
-        geom.conaffinity = obstacle['conaffinity']
-    
-    def remove_obstacles(self):
-        """Remove all obstacles from the environment."""
-        model = self.env.unwrapped.model
-        
-        # Remove obstacle bodies
-        for obstacle in self.obstacles_config['obstacles']:
-            body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, obstacle['name'])
-            if body_id >= 0:
-                mujoco.mj_deleteBody(model, body_id)
-        
-        # Recompile the model
-        mujoco.mj_forward(model, self.env.unwrapped.data)
-    
-    def update_obstacles(self, new_obstacles_config):
-        """Update obstacles with new configuration."""
-        self.remove_obstacles()
-        self.obstacles_config = new_obstacles_config
-        self.add_obstacles()
     
     def get_obstacle_positions(self):
-        """Get current positions of all obstacles."""
+        """
+        Get current positions of all obstacles.
+        
+        This method attempts to find obstacles by name in the MuJoCo model.
+        Adjust obstacle names based on how they are defined in your source files.
+        """
         positions = []
         model = self.env.unwrapped.model
         
-        for obstacle in self.obstacles_config['obstacles']:
-            body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, obstacle['name'])
-            if body_id >= 0:
-                pos = model.body_pos[body_id].copy()
-                positions.append(pos)
+        # Try to find common obstacle names
+        # Adjust these names based on your actual obstacle definitions
+        obstacle_names = ['obstacle1', 'obstacle2', 'obstacle1_geom', 'obstacle2_geom']
+        
+        for name in obstacle_names:
+            try:
+                body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, name)
+                if body_id >= 0:
+                    pos = model.body_pos[body_id].copy()
+                    positions.append(pos)
+            except:
+                # Try as geom instead
+                try:
+                    geom_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, name)
+                    if geom_id >= 0:
+                        body_id = model.geom_bodyid[geom_id]
+                        pos = model.body_pos[body_id].copy()
+                        positions.append(pos)
+                except:
+                    continue
         
         return positions
 
@@ -135,17 +69,21 @@ def create_fetch_reach_with_obstacles(obstacles_config=None, render_mode="rgb_ar
     """
     Create a FetchReach environment with obstacles.
     
+    Note: Obstacles must be added directly to the environment source files.
+    This function simply creates the base environment and wraps it.
+    
     Args:
-        obstacles_config: Configuration for obstacles (see FetchReachWithObstacles)
+        obstacles_config: Optional config (kept for compatibility, not used)
         render_mode: Render mode for the environment
     
     Returns:
-        FetchReachWithObstacles: Environment with obstacles
+        FetchReachWithObstacles: Environment wrapper
     """
     # Create base environment
+    # Note: Obstacles should already be defined in the environment source
     base_env = gym.make("FetchReach-v2", render_mode=render_mode)
     
-    # Wrap with obstacles
+    # Wrap with obstacles wrapper
     env = FetchReachWithObstacles(base_env, obstacles_config)
     
     return env

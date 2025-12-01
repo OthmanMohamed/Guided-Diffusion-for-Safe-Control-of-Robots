@@ -4,6 +4,9 @@ Script 04: Train Merlin Policy
 
 This script trains the Merlin policy using offline demonstration data.
 The policy learns to reach goals in the FetchReach environment with obstacles.
+
+Note: Obstacles must be added directly to the FetchReach environment source files.
+See README.md for instructions on adding obstacles.
 """
 
 import os

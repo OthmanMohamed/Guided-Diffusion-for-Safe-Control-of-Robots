@@ -5,6 +5,9 @@ Script 02: Collect Safety Data
 This script collects safety-labeled data for training the safety model.
 It runs episodes and labels actions as safe (1.0) or unsafe (0.0) based on
 whether they lead to collisions. Steps before collisions are also labeled as unsafe.
+
+Note: Obstacles must be added directly to the FetchReach environment source files.
+See README.md for instructions on adding obstacles.
 """
 
 import os
@@ -26,6 +29,9 @@ def check_collision(env):
     """
     Check for collisions using MuJoCo's contact detection system.
     Returns True if there is a collision between the robot and obstacles/table.
+    
+    Note: This function assumes obstacles are already defined in the environment source files.
+    The obstacle names (e.g., "obstacle1_geom") should match those in your environment XML/model files.
     """
     mj_model = env.unwrapped.model
     mj_data = env.unwrapped.data

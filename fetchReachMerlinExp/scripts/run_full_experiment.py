@@ -8,6 +8,9 @@ This script runs the complete pipeline for the FetchReach Merlin experiment with
 3. Train safety model
 4. Train Merlin policy
 5. Evaluate policy (with and without safety)
+
+Note: Obstacles must be added directly to the FetchReach environment source files.
+See README.md for instructions on adding obstacles.
 """
 
 import os

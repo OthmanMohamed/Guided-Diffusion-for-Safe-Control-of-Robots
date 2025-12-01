@@ -4,6 +4,9 @@ Script 05: Evaluate Policy
 
 This script evaluates a trained Merlin policy without safety integration.
 It measures performance metrics including success rate, discounted returns, and collision rate.
+
+Note: Obstacles must be added directly to the FetchReach environment source files.
+See README.md for instructions on adding obstacles.
 """
 
 import os
@@ -107,11 +110,22 @@ def discounted_return(rewards, gamma, reward_offset=True):
 
 def is_valid_goal(goal_pos):
     """
-    Check if a goal position is valid (not inside the obstacle).
-    The obstacle is a box at position (1.25, 0.75, 0.42) with size (0.05, 0.05, 0.4).
+    Check if a goal position is valid (not inside any obstacles).
+    
+    Note: This function uses example obstacle positions. Adjust the obstacle_pos
+    and obstacle_size arrays to match the obstacles defined in your environment source files.
+    The obstacles should already be defined in the FetchReach environment XML/model files.
+    
+    Args:
+        goal_pos: Goal position as numpy array [x, y, z]
+    
+    Returns:
+        bool: True if goal is valid (not inside obstacles), False otherwise
     """
-    obstacle_pos = np.array([1.25, 0.75, 0.42])
-    obstacle_size = np.array([0.05, 0.05, 0.4])
+    # Example obstacle positions - adjust these to match your actual obstacle definitions
+    # These should correspond to obstacles defined in the environment source files
+    obstacle_pos = np.array([1.25, 0.75, 0.42])  # Example obstacle position
+    obstacle_size = np.array([0.05, 0.05, 0.4])  # Example obstacle size
     
     # Check if goal is inside the obstacle's bounding box
     is_inside = (
@@ -126,6 +140,9 @@ def check_collision(env):
     """
     Check for collisions using MuJoCo's contact detection system.
     Returns True if there is a collision between the robot and obstacles/table.
+    
+    Note: This function assumes obstacles are already defined in the environment source files.
+    The obstacle names (e.g., "obstacle1_geom") should match those in your environment XML/model files.
     """
     mj_model = env.unwrapped.model
     mj_data = env.unwrapped.data

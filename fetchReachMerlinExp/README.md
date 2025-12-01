@@ -215,6 +215,23 @@ python scripts/run_full_experiment.py --skip-data-collection --skip-safety-data 
    env = gym.make("FetchReach-v2")
    ```
 
+3. **Important: Adding Obstacles**
+   
+   Obstacles must be added directly to the FetchReach environment source files. 
+   The `FetchReachWithObstacles` wrapper does not programmatically add obstacles.
+   
+   To add obstacles:
+   - Locate the FetchReach environment XML/model files in your gymnasium installation
+   - Modify the XML to include obstacle bodies and geoms in the `<worldbody>` section
+   - Example obstacle definition:
+     ```xml
+     <body name="obstacle1" pos="1.25 0.75 0.42">
+       <geom name="obstacle1_geom" type="box" size="0.025 0.025 0.2" 
+             rgba="0.8 0.2 0.2 0.8" contype="1" conaffinity="1"/>
+     </body>
+     ```
+   - After modifying the source files, the environment will automatically include obstacles
+
 ## Key Components
 
 ### ReplayBuffer (`components/buffer.py`)
@@ -229,8 +246,8 @@ python scripts/run_full_experiment.py --skip-data-collection --skip-safety-data 
 
 ### FetchReachWithObstacles (`envs/fetch_reach_with_obstacles.py`)
 - Wraps the standard FetchReach environment
-- Adds obstacles to the scene
-- Provides collision detection utilities
+- Note: Obstacles must be added directly to the environment source XML files
+- Provides utilities for accessing obstacle information
 
 ### Policy (`scripts/04_train_merlin_policy.py`)
 - Goal-conditioned policy network
